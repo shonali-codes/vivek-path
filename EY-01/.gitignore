@@ -1,0 +1,5 @@
+out/
+build/*
+!build/words.json
+assets/*.wav
+assets/*.mp3
