@@ -33,6 +33,11 @@ GOLD = (236, 190, 104)
 GOLD_TERMS = {"makarasamkranti", "ganga", "vireswara", "siva", "vrata", "sannyasin"}
 TITLE = ("Born 12 January 1863", "a prayer answered")
 TITLE_IN, TITLE_OUT = 16.2, 25.5  # over SEG 2
+# opening hook card over shot 1 — fully visible from frame 0 (doubles as thumbnail)
+OPEN_KICKER = "THE BIRTH OF"
+OPEN_NAME = "Swami Vivekananda"
+OPEN_HOOK = ("Before he awakened the world,", "he was a mother’s prayer.")
+OPEN_OUT = 12.5        # starts fading out here (shot 1 cuts at ~15.2 s)
 # focal point per shot (normalised x, y) the push-in drifts toward
 FOCUS = {1: (.42, .58), 2: (.50, .52), 3: (.42, .48), 4: (.50, .40),
          5: (.42, .58), 6: (.62, .52), 7: (.42, .48), 8: (.50, .55)}
@@ -132,9 +137,42 @@ def init_worker():
     G["shade_bottom"] = (1 - bot)[..., None].repeat(W, 1)
     top = np.clip((0.32 - y) / 0.32, 0, 1) ** 0.9 * 0.62
     G["shade_top"] = top[..., None]
+    op = np.clip((0.40 - y) / 0.40, 0, 1) ** 0.8 * 0.66
+    G["shade_open"] = op[..., None]
     tf, tf2 = FONT("600-normal", 76), FONT("500-italic", 70)
     G["title"] = [text_sprite(TITLE[0], tf, WHITE, blur=12, strength=255), text_sprite(TITLE[1], tf2, (250, 218, 150), blur=12, strength=255)]
     G["endcard"] = build_endcard()
+    G["opener"] = build_opener()
+
+def tracked_sprite(text, font, fill, track, blur=8, strength=230):
+    """Letter-spaced text (for small caps kickers)."""
+    widths = [font.getlength(c) for c in text]
+    tw = int(sum(widths) + track * (len(text) - 1)) + 8
+    _, t, _, b = font.getbbox(text)
+    base = Image.new("RGBA", (tw, b + 8), (0, 0, 0, 0)); d = ImageDraw.Draw(base); x = 4
+    for c, w in zip(text, widths):
+        d.text((x, 0), c, font=font, fill=fill + (255,)); x += w + track
+    pad = 40
+    img = Image.new("RGBA", (base.width + 2 * pad, base.height + 2 * pad), (0, 0, 0, 0))
+    a = base.getchannel("A"); sh = Image.new("L", img.size, 0); sh.paste(a, (pad, pad + 3))
+    sh = sh.filter(ImageFilter.GaussianBlur(blur)).point(lambda v: min(255, int(v * strength / 255 * 1.6)))
+    img.putalpha(sh); img.alpha_composite(base, (pad, pad))
+    return img
+
+def build_opener():
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    def put(spr, cy):
+        img.alpha_composite(spr, (int(W / 2 - spr.width / 2), int(cy - spr.height / 2)))
+    put(tracked_sprite(OPEN_KICKER, FONT("600-normal", 44), WHITE, 14), 238)
+    size = 124
+    while FONT("700-normal", size).getlength(OPEN_NAME) > W - 2 * 90: size -= 2
+    put(text_sprite(OPEN_NAME, FONT("700-normal", size), GOLD, blur=12, strength=255), 340)
+    d = ImageDraw.Draw(img)
+    d.line([(W / 2 - 110, 428), (W / 2 + 110, 428)], fill=GOLD + (220,), width=2)
+    hf = FONT("500-italic", 64)
+    put(text_sprite(OPEN_HOOK[0], hf, WHITE, blur=11, strength=255), 492)
+    put(text_sprite(OPEN_HOOK[1], hf, (250, 218, 150), blur=11, strength=255), 568)
+    return img
 
 def build_endcard():
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -184,6 +222,9 @@ def render(fi):
             bl = np.asarray(Image.fromarray(frame.astype(np.uint8)).filter(ImageFilter.GaussianBlur(14)), np.float32)
             frame = frame * (1 - glow) + np.maximum(frame, bl * 1.08) * glow
     frame = frame * G["shade_bottom"]
+    oa = 1 - smooth((t - OPEN_OUT) / 1.2)
+    if oa > 0:
+        frame = frame * (1 - G["shade_open"] * oa)
     # title over SEG 2
     ta = smooth((t - TITLE_IN) / 1.0) * (1 - smooth((t - TITLE_OUT + 1.0) / 1.0))
     if ta > 0:
@@ -196,6 +237,8 @@ def render(fi):
     if ta > 0:
         for spr, cy in zip(G["title"], (270, 362)):
             overlay(img, spr, W / 2 - spr.width / 2, cy - spr.height / 2 + (1 - ta) * 10, ta)
+    if oa > 0:
+        overlay(img, G["opener"], 0, -(1 - oa) * 12, oa)
     if ec > 0:
         overlay(img, G["endcard"], 0, (1 - ec) * 14, smooth((t - tl["ec_start"] - 0.25) / 0.9))
     # word-by-word caption
