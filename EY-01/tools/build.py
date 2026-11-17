@@ -42,7 +42,7 @@ OPEN_OUT = 12.5        # starts fading out here (shot 1 cuts at ~15.2 s)
 FOCUS = {1: (.42, .58), 2: (.50, .52), 3: (.42, .48), 4: (.50, .40),
          5: (.42, .58), 6: (.62, .52), 7: (.42, .48), 8: (.50, .55)}
 # music bed
-BED_LUFS = -19.0       # bed level before ducking; ducked under speech ≈ -21..-23
+BED_LUFS = -18.0       # bed level before ducking; under speech it sits ~10-11 dB below the VO
 TARGET_LUFS = -14.0
 TP_LIMIT = 0.85        # ≈ -1.4 dBFS sample peak ceiling
 
@@ -289,11 +289,11 @@ def build_audio(total):
             f"volume={g:.2f}dB,afade=t=in:d=1.5,afade=t=out:st={total - 2.5:.3f}:d=2.5[bed];"
             "[0:a]asplit=2[vo][key];"
             # duck under speech, bloom back in pauses and over the end card
-            "[bed][key]sidechaincompress=threshold=0.03:ratio=3:attack=120:release=1400:makeup=1[bedd];"
-            "[vo][bedd]amix=inputs=2:normalize=0:duration=first[mix]")
+            "[bed][key]sidechaincompress=threshold=0.06:ratio=2:attack=150:release=1500:makeup=1[bedd];"
+            "[bedd]asplit=2[bedm][bedstem];[vo][bedm]amix=inputs=2:normalize=0:duration=first[mix]")
         mix = A("build", "mix.wav")
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", vo_n, "-i", bed,
-                        "-filter_complex", graph, "-map", "[mix]", "-c:a", "pcm_f32le", mix], check=True)
+                        "-filter_complex", graph, "-map", "[mix]", "-c:a", "pcm_f32le", mix, "-map", "[bedstem]", "-c:a", "pcm_f32le", A("build", "bed_stem.wav")], check=True)
     else:
         print("!! no music bed found in assets/ — building VO-only mix")
         mix = vo_n
