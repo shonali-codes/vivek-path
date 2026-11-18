@@ -1,0 +1,6 @@
+*/out/
+*/build/*
+!*/build/words.json
+*/assets/*.wav
+*/assets/*.mp3
+__pycache__/

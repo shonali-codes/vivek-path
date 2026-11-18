@@ -1,0 +1,10 @@
+{
+ "id": "EY-02", "slug": "The-Two-Hands", "bed": "EY-02_bed_yaman",
+ "gold_terms": ["Ramayana", "Mahabharata", "Bhuvaneswari"],
+ "cold_open": {"vo_offset": 3.2, "hold": 2.9, "dissolve": 0.9, "y": 600,
+   "lines": [{"runs": [["How do you raise a", "white"]], "size": 96},
+             {"runs": [["Swami Vivekananda", "gold"], ["?", "white"]], "size": 122}]},
+ "soft_dissolve": {"into": 5, "dur": 1.6, "glow": 0.3},
+ "focus": {"0": [0.55, 0.5], "1": [0.5, 0.45], "2": [0.6, 0.45], "3": [0.45, 0.45], "4": [0.5, 0.45],
+           "5": [0.4, 0.5], "6": [0.35, 0.5], "7": [0.5, 0.45], "8": [0.55, 0.45]}
+}

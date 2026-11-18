@@ -1,0 +1,12 @@
+{
+ "id": "EY-01", "slug": "A-Boon-at-Dawn", "bed": "EY-01_bed_bhairav",
+ "gold_terms": ["Makarasamkranti", "Ganga", "Vireswara", "Siva", "vrata", "sannyasin"],
+ "spoken": {"6:33": ["six", "thirty", "three"], "1863": ["eighteen", "sixty", "three"]},
+ "display": {"6:33,": "6:33"},
+ "soft_dissolve": {"into": 4, "dur": 1.6, "glow": 0.55},
+ "opener": {"kicker": "THE BIRTH OF", "name": "Swami Vivekananda",
+            "hook": ["Before he awakened the world,", "he was a mother’s prayer."], "out": 12.5},
+ "title": {"lines": ["Born 12 January 1863", "a prayer answered"], "in": 16.2, "out": 25.5},
+ "focus": {"1": [0.42, 0.58], "2": [0.5, 0.52], "3": [0.42, 0.48], "4": [0.5, 0.4],
+           "5": [0.42, 0.58], "6": [0.62, 0.52], "7": [0.42, 0.48], "8": [0.5, 0.55]}
+}
